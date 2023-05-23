@@ -70,9 +70,11 @@
 #elif defined(_WIN64)
 #define GHC_OS_WINDOWS
 #define GHC_OS_WIN64
+#define GHC_HAS_ROOTNAME
 #elif defined(_WIN32)
 #define GHC_OS_WINDOWS
 #define GHC_OS_WIN32
+#define GHC_HAS_ROOTNAME
 #elif defined(__CYGWIN__)
 #define GHC_OS_CYGWIN
 #elif defined(__sun) && defined(__SVR4)
@@ -3221,6 +3223,7 @@ GHC_INLINE path::string_type::size_type path::root_name_length() const noexcept
             return pos;
         }
     }
+
     return 0;
 #endif
 }
@@ -3374,7 +3377,7 @@ GHC_INLINE bool path::has_extension() const
 
 GHC_INLINE bool path::is_absolute() const
 {
-#ifdef GHC_OS_WINDOWS
+#ifdef GHC_HAS_ROOTNAME
     return has_root_name() && has_root_directory();
 #else
     return has_root_directory();
