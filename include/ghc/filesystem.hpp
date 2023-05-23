@@ -3224,15 +3224,6 @@ GHC_INLINE path::string_type::size_type path::root_name_length() const noexcept
         }
     }
 
-    // MODIOTEST
-    impl_string_type::size_type posSep = _path.find(preferred_separator);
-    impl_string_type::size_type posCol = _path.find(':');
-    if (posCol != impl_string_type::npos && 
-       ( (posCol != impl_string_type::npos && posCol == posSep - 1) || (posCol+1 == _path.length()) ))
-    {
-        return posCol + 1;
-    }
-
     return 0;
 #endif
 }
