@@ -2290,7 +2290,8 @@ GHC_INLINE std::unique_ptr<REPARSE_DATA_BUFFER, free_deleter<REPARSE_DATA_BUFFER
         return reparseData;
     }
     else {
-        ec = detail::make_system_error();
+        auto error = ::GetLastError();
+        ec = detail::make_system_error(error);
     }
     return nullptr;
 }
@@ -2385,6 +2386,13 @@ GHC_INLINE bool is_symlink_from_INFO(const path &p, const INFO* info, std::error
 {
     if ((info->dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT)) {
         auto reparseData = detail::getReparseData(p, ec);
+
+        if (ec.value() == ERROR_NOT_A_REPARSE_POINT)
+        {
+            ec.clear();
+            return false;
+        }
+
         if (!ec && reparseData && IsReparseTagMicrosoft(reparseData->ReparseTag) && reparseData->ReparseTag == IO_REPARSE_TAG_SYMLINK) {
             return true;
         }
@@ -2459,7 +2467,8 @@ GHC_INLINE file_status symlink_status_ex(const path& p, std::error_code& ec, uin
     file_status fs;
     WIN32_FILE_ATTRIBUTE_DATA attr;
     if (!GetFileAttributesExW(GHC_NATIVEWP(p), GetFileExInfoStandard, &attr)) {
-        ec = detail::make_system_error();
+		auto error = ::GetLastError();
+		ec = detail::make_system_error(error);
     }
     else {
         ec.clear();
@@ -2505,7 +2514,8 @@ GHC_INLINE file_status status_ex(const path& p, std::error_code& ec, file_status
     }
     WIN32_FILE_ATTRIBUTE_DATA attr;
     if (!::GetFileAttributesExW(GHC_NATIVEWP(p), GetFileExInfoStandard, &attr)) {
-        ec = detail::make_system_error();
+		auto error = ::GetLastError();
+		ec = detail::make_system_error(error);
     }
     else if (attr.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) {
         auto reparseData = detail::getReparseData(p, ec);
@@ -4509,7 +4519,8 @@ GHC_INLINE uintmax_t file_size(const path& p, std::error_code& ec) noexcept
 #ifdef GHC_OS_WINDOWS
     WIN32_FILE_ATTRIBUTE_DATA attr;
     if (!GetFileAttributesExW(GHC_NATIVEWP(p), GetFileExInfoStandard, &attr)) {
-        ec = detail::make_system_error();
+		auto error = ::GetLastError();
+		ec = detail::make_system_error(error);
         return static_cast<uintmax_t>(-1);
     }
     return static_cast<uintmax_t>(attr.nFileSizeHigh) << (sizeof(attr.nFileSizeHigh) * 8) | attr.nFileSizeLow;
